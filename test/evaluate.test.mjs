@@ -19,6 +19,10 @@ test('hromadný vstup odstraní duplicity a hlídá 40 lidí', () => {
   assert.equal(parsePeople('špatný řádek').errors.length, 1);
   assert.equal(parsePeople(Array.from({ length: 41 }, (_, i) => `Osoba ${i}; 1968`).join('\n')).errors.length, 1);
 });
+test('čárka je doporučený oddělovač, středník zůstává podporovaný', () => {
+  assert.deepEqual(parsePeople('Ewa Farna, 1993'), parsePeople('Ewa Farna; 1993'));
+  assert.equal(parsePeople('Ewa Farna 1993').errors[0], 'Řádek 1: použijte zápis „Jméno, 1972“.');
+});
 test('shoda netoleruje jiného člověka, toleruje diakritiku a pořadí', () => {
   assert.ok(sameName('Miloš Čermák', 'Milos Cermak'));
   assert.ok(sameName('Miloš Čermák', 'Čermák Miloš'));

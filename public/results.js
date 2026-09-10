@@ -13,7 +13,7 @@ export function parsePeople(value) {
     const line = raw.trim();
     if (!line) return;
     const match = line.match(/^(.+?)[;,\t]\s*(\d{4})\s*$/);
-    if (!match) { errors.push(`Řádek ${index + 1}: použijte zápis „Jméno; 1972“.`); return; }
+    if (!match) { errors.push(`Řádek ${index + 1}: použijte zápis „Jméno, 1972“.`); return; }
     const name = match[1].trim().replace(/\s+/g, ' '), birthYear = Number(match[2]);
     if (name.length < 2 || name.length > 100 || birthYear < 1850 || birthYear > new Date().getFullYear()) { errors.push(`Řádek ${index + 1}: jméno nebo rok nevypadá platně.`); return; }
     const key = `${normalizeName(name)}|${birthYear}`;
