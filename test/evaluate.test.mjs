@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHandler, normalizePerson } from '../netlify/functions/evaluate.mjs';
-import { AUTHORS, JUDGE, VERSION, sameName, leaksIdentity, judgeRequest } from '../public/protocol.js';
+import { AUTHORS, SONNET, JUDGE, VERSION, sameName, leaksIdentity, judgeRequest, portraitRequest } from '../public/protocol.js';
 import { scoreResults, parsePeople, classifyGuess, retryStage } from '../public/results.js';
 
 const env = { OPENROUTER_API_KEY: 'test-secret', PILOT_ACCESS_CODE: 'test-code' };
@@ -41,6 +41,18 @@ test('kontrola úniku zachytí jméno i rok', () => {
 test('panel má čtyři autory bez rozhodčího', () => {
   assert.equal(AUTHORS.length, 4);
   assert.ok(AUTHORS.every(model => model.id !== JUDGE.id));
+});
+test('Sonnet skutečně vypíná přemýšlení a neposílá nepodporovanou teplotu', () => {
+  const request = portraitRequest(SONNET, 'Pavel Nedvěd', 1972);
+  assert.deepEqual(request.reasoning, { enabled: false });
+  assert.equal(request.temperature, undefined);
+  assert.equal(request.provider.require_parameters, true);
+});
+test('ostatní autoři i Astra zachovávají dosavadní úsilí low', () => {
+  for (const model of AUTHORS.filter(model => model.id !== SONNET.id)) {
+    assert.deepEqual(portraitRequest(model, 'Pavel Nedvěd', 1972).reasoning, { effort: 'low', exclude: true });
+  }
+  assert.deepEqual(judgeRequest('X je fotbalista.').reasoning, { effort: 'low', exclude: true });
 });
 test('rozhodčí dostane jen portrét, bez nástrojů a seznamu lidí', async () => {
   let sent;

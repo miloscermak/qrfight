@@ -1,4 +1,5 @@
 export const VERSION = 'portrait-cs-guess-v2';
+export const SONNET = { id: 'anthropic/claude-sonnet-5', label: 'Claude Sonnet 5', temperature: false, thinking: false };
 export const AUTHORS = [
   { id: 'anthropic/claude-fable-5.1', label: 'Claude Fable 5.1', temperature: false },
   { id: 'google/gemini-3.8-flash', label: 'Gemini 3.8 Flash', temperature: true },
@@ -33,6 +34,8 @@ export function judgeRequest(portrait) {
 }
 function makeRequest(model, system, user, maxTokens) {
   const body = { model: model.id, messages: [{ role: 'system', content: system }, { role: 'user', content: user }], max_tokens: maxTokens, reasoning: { effort: 'low', exclude: true }, provider: { require_parameters: true } };
+  // Vypnutí přemýšlení není totéž jako skrytí jeho textu nebo nízké úsilí.
+  if (model.thinking === false) body.reasoning = { enabled: false };
   if (model.temperature) body.temperature = 0;
   return body;
 }

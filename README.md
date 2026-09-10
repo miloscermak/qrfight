@@ -25,3 +25,14 @@ Přístupový kód je pouze ochrana malého pilotu, ne veřejný konferenční p
 `npm test` spouští neplacené testy s náhradními odpověďmi. `npx netlify-cli deploy --prod --no-build` nasazuje web a funkci do již propojeného projektu. GitHub push sám v tomto pilotu deployment nespouští.
 
 Vývojové placené zkoušky jsou v `scripts/`; surové výsledky v ignorované `.pilot/`. `guessing-pilot.mjs` používá uložené české portréty a brání opakovanému spuštění, pokud výsledek již existuje. `export-portrait-pilot.mjs --guessing` vytvoří čitelný přehled. Na pěti známých osobnostech se shoda po povolení tipů zvýšila z 13/20 na 16/20, opakování rozhodčího stálo $0.19865. Jde o vývojový vzorek, nikoli nezávislou validaci nebo predikci pro konferenční publikum.
+
+### Zkouška Sonnetu 5 bez přemýšlení (10. září 2026)
+
+`scripts/sonnet-pilot.mjs` porovnal pět nových portrétů Sonnetu s uloženými portréty Fable. Stejné české prompty, stejný rozhodčí s povoleným tipováním; ostatní autoři se znovu nevolali. Sonnet používá `reasoning: { enabled: false }`, nikoli pouhé skrytí přemýšlení. API vykázalo nula reasoning tokenů ve všech pěti odpovědích. Surové požadavky a odpovědi: `.pilot/sonnet-five.json` (nepublikováno v repozitáři).
+
+- Sonnet: 3/5 rozpoznaných portrétů; Fable: 5/5.
+- Sonnet uspěl u Pavla Nedvěda, Ewy Farne a Tomáše Halíka. U Miloše Čermáka Astra tipla Daniela Dočekala; u Michala Šandy Sonnet odpověděl NEVÍM.
+- Pět portrétů Sonnetu stálo $0.01105 oproti původním $0.10915 za Fable. Celá nová zkouška včetně čtyř dotazů Astry stála $0.03019 (devět API volání).
+- Medián času tvorby portrétu byl 4.706 s u Sonnetu oproti uloženým 2.471 s u Fable. Nejde o souběžný rychlostní benchmark: Sonnet obsloužil Claude Platform on AWS, původní Fable Anthropic a odlišné bylo také souběžné zatížení.
+
+Nasazený panel zůstává s Fable. Zkouška prokázala úsporu, ale ne zrychlení ani zachování rozpoznatelnosti na tomto malém vzorku. Výsledek není důkaz, že Sonnet dané lidi vůbec nezná.
