@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Pilotní test toho, co si jazykové modely vybaví o konkrétních lidech bez hledání na internetu.">
+  <title>Jste ve vahách?</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <p class="eyebrow">PILOTNÍ EXPERIMENT</p>
+      <h1>Jste ve <em>vahách?</em></h1>
+      <p class="lede">Pět jazykových modelů dostane jen jméno a rok narození. Žádný internet, žádná nápověda. Co si vybaví ze své naučené paměti?</p>
+    </header>
+
+    <section class="panel input-panel" aria-labelledby="input-heading">
+      <div class="section-head">
+        <div>
+          <p class="step">01 / VSTUP</p>
+          <h2 id="input-heading">Jedno jméno na řádek</h2>
+        </div>
+        <span class="counter"><b id="line-count">0</b> / 40</span>
+      </div>
+
+      <label for="people">Jméno a rok narození oddělte středníkem</label>
+      <textarea id="people" rows="9" spellcheck="false" placeholder="Pavel Nedvěd; 1972&#10;Ewa Farna; 1993&#10;Miloš Čermák; 1968"></textarea>
+      <p class="hint">Pilot přijme nejvýše 40 různých kombinací jména a roku.</p>
+
+      <div class="access-row">
+        <div>
+          <label for="access-code">Přístupový kód</label>
+          <input id="access-code" type="password" autocomplete="off" placeholder="Kód pro pilot">
+        </div>
+        <button id="start" type="button">Spustit test</button>
+      </div>
+      <p id="form-error" class="message error" role="alert" hidden></p>
+    </section>
+
+    <section id="results-section" class="results-section" aria-labelledby="results-heading" hidden>
+      <div class="section-head results-head">
+        <div>
+          <p class="step">02 / VÝSLEDKY</p>
+          <h2 id="results-heading">Modelová paměť v přímém přenosu</h2>
+        </div>
+        <div class="result-actions">
+          <span id="progress" class="progress">0 / 0</span>
+          <button id="export" class="secondary" type="button" disabled>Export JSON</button>
+        </div>
+      </div>
+
+      <div class="legend" aria-label="Legenda výsledků">
+        <span><i class="light green"></i> zná konkrétně</span>
+        <span><i class="light orange"></i> má tušení</span>
+        <span><i class="light red"></i> nezná</span>
+        <span><i class="light gray"></i> technická chyba</span>
+      </div>
+
+      <div id="cards" class="cards" aria-live="polite"></div>
+    </section>
+
+    <section class="method">
+      <p class="step">JAK ČÍST VÝSLEDEK</p>
+      <p><b>Zelená</b> znamená, že model uvedl profesi i konkrétní důvod známosti. <b>Oranžová</b> je rámcové nebo nejisté rozpoznání. <b>Červená</b> znamená poctivé „nevím“.</p>
+      <p>Barva je nejdřív vlastní odhad modelu, nikoli důkaz pravdy. Kliknutím na semafor ji můžete opravit podle skutečnosti. Skóre je prostý součet: zelená 2, oranžová 1, červená 0. Žádná numerologická magie navíc.</p>
+    </section>
+  </main>
+
+  <template id="card-template">
+    <article class="person-card">
+      <div class="card-top">
+        <div>
+          <p class="person-position"></p>
+          <h3><span class="person-name"></span> <small class="person-year"></small></h3>
+        </div>
+        <div class="score-wrap">
+          <strong class="score">—</strong><span>/10</span>
+          <small>LLM skóre</small>
+        </div>
+      </div>
+      <p class="card-status">Čeká ve frontě…</p>
+      <div class="model-results"></div>
+    </article>
+  </template>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
+
