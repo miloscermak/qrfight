@@ -5,7 +5,7 @@ const $ = selector => document.querySelector(selector);
 const peopleInput = $('#people'), accessInput = $('#access-code'), startButton = $('#start');
 const exportButton = $('#export'), pauseButton = $('#pause'), retryButton = $('#retry');
 const errorBox = $('#form-error'), cards = $('#cards'), cache = new Map();
-let runs = [], busy = false, stop = false;
+let runs = [], busy = false, stop = false, exportUrl;
 $('#author-prompt').textContent = PORTRAIT_PROMPT;
 $('#judge-prompt').textContent = JUDGE_PROMPT;
 $('#panel-models').textContent = AUTHORS.map(model => model.label).join(' · ');
@@ -102,7 +102,7 @@ function renderCard(run) {
   card.querySelector('.person-year').textContent = `(${run.birthYear})`;
   const { matched, pending, total } = scoreResults(run.results);
   card.querySelector('.score').textContent = pending ? `${matched}–${matched + pending}` : matched;
-  card.querySelector('.card-status').textContent = pending ? `Zatím poznáno ${matched} ze ${total} portrétů. Nedokončeno: ${pending}. Rozmezí není konečné skóre.` : `Astra poznala jméno z ${matched} ze ${total} portrétů.`;
+  card.querySelector('.card-status').textContent = pending ? `Zatím poznáno ${matched} ze ${total} portrétů. Nedokončeno: ${pending}. Rozmezí není konečné skóre.` : `Poznáno: ${matched} ze ${total} portrétů.`;
   card.classList.toggle('running', run.results.some(result => ['writing', 'judging'].includes(result.status)));
   const rows = card.querySelector('.model-results'); rows.replaceChildren();
   run.results.forEach(result => {
@@ -136,6 +136,11 @@ function updateProgress() {
 }
 function exportResults() {
   const output = { version: VERSION, generatedAt: new Date().toISOString(), authors: AUTHORS, judge: JUDGE, prompts: { portrait: PORTRAIT_PROMPT, judge: JUDGE_PROMPT }, note: 'Rozpoznatelnost anonymního portrétu, nikoli ověření pravdivosti. Shoda jména ignoruje diakritiku, velikost písmen a pořadí dvou slov. Přezdívky a jiné varianty se mohou vyhodnotit jako jiný tip.', people: [...cache.values()].map(({ index, ...run }) => ({ ...run, score: scoreResults(run.results) })) };
-  const url = URL.createObjectURL(new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = `qrfight-pilot-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const text = JSON.stringify(output, null, 2);
+  if (exportUrl) URL.revokeObjectURL(exportUrl);
+  exportUrl = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  const link = $('#download-export'); link.href = exportUrl; link.download = `qrfight-pilot-${new Date().toISOString().slice(0, 10)}.json`;
+  $('#export-data').value = text;
+  $('#export-preview').hidden = false;
+  $('#export-preview').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }

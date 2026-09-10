@@ -125,6 +125,10 @@ h3 small { color: var(--faint); font: 14px ui-monospace, SFMono-Regular, Menlo, 
 .model-panel { color: var(--muted); font-size: 13px; line-height: 1.8; }
 .result-actions { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .results-hint { margin-bottom: 16px; line-height: 1.5; }
+.export-preview { margin-bottom: 22px; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.export-preview a { color: var(--accent); font-weight: 700; }
+.export-preview summary { margin-top: 12px; cursor: pointer; font-size: 13px; }
+.export-preview textarea { font-size: 12px; }
 .card-top { align-items: flex-start; }
 .score-wrap { flex: none; }
 .model-result { padding: 15px 0; border-bottom: 1px solid var(--line); }

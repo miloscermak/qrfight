@@ -62,6 +62,14 @@
       </div>
       <p class="hint results-hint">Rozklikněte model: uvidíte celý portrét i tip Astry. Výsledky zůstávají jen v této stránce — před zavřením je exportujte. Hotové výsledky při opětovném spuštění použijeme znovu.</p>
       <p id="cost" class="hint results-hint"></p>
+      <section id="export-preview" class="export-preview" aria-label="Export výsledků" hidden>
+        <a id="download-export" download>Stáhnout soubor JSON</a>
+        <p class="hint">Snímek výsledků v okamžiku exportu. Pokud vestavěný prohlížeč soubor nestáhne, můžete data zkopírovat níže.</p>
+        <details><summary>Zobrazit data ke zkopírování</summary>
+          <label for="export-data">Exportovaná data</label>
+          <textarea id="export-data" readonly rows="6" spellcheck="false"></textarea>
+        </details>
+      </section>
 
       <div id="cards" class="cards" aria-live="polite"></div>
     </section>
