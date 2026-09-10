@@ -22,7 +22,6 @@ function showError(message) { errorBox.textContent = message; errorBox.hidden = 
 async function startEvaluation() {
   if (busy) return;
   const { people, errors } = parsePerson(peopleInput.value);
-  if (!people.length) errors.unshift('Zadejte alespoň jedno jméno a rok narození.');
   if (errors.length) return showError(errors[0]);
   if (!accessInput.value.trim()) return showError('Zadejte přístupový kód k pilotu.');
   busy = true; startButton.disabled = peopleInput.disabled = accessInput.disabled = true; errorBox.hidden = true;
