@@ -1,230 +1,141 @@
-const peopleInput = document.querySelector("#people");
-const accessInput = document.querySelector("#access-code");
-const startButton = document.querySelector("#start");
-const exportButton = document.querySelector("#export");
-const errorBox = document.querySelector("#form-error");
-const lineCount = document.querySelector("#line-count");
-const resultsSection = document.querySelector("#results-section");
-const progress = document.querySelector("#progress");
-const cards = document.querySelector("#cards");
-const template = document.querySelector("#card-template");
+import { AUTHORS, JUDGE, VERSION, PORTRAIT_PROMPT, JUDGE_PROMPT } from './protocol.js';
+import { parsePeople, isFinal, classifyGuess, retryStage, scoreResults } from './results.js';
 
-let runs = [];
-
-peopleInput.addEventListener("input", () => {
-  lineCount.textContent = peopleInput.value.split(/\r?\n/).filter(line => line.trim()).length;
-});
-
-startButton.addEventListener("click", startEvaluation);
-exportButton.addEventListener("click", exportResults);
-
-function parsePeople(value) {
-  const parsed = [];
-  const errors = [];
-  const seen = new Set();
-
-  value.split(/\r?\n/).forEach((rawLine, index) => {
-    const line = rawLine.trim();
-    if (!line) return;
-    const match = line.match(/^(.+?)[;,\t]\s*(\d{4})\s*$/);
-    if (!match) {
-      errors.push(`Řádek ${index + 1}: použijte zápis „Jméno; 1972“.`);
-      return;
-    }
-    const name = match[1].trim().replace(/\s+/g, " ");
-    const birthYear = Number(match[2]);
-    if (name.length < 2 || name.length > 100 || birthYear < 1850 || birthYear > new Date().getFullYear()) {
-      errors.push(`Řádek ${index + 1}: jméno nebo rok nevypadá platně.`);
-      return;
-    }
-    const key = `${name.toLocaleLowerCase("cs-CZ")}|${birthYear}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      parsed.push({ name, birthYear });
-    }
-  });
-
-  if (parsed.length > 40) errors.push("Pilot přijme nejvýše 40 jmen najednou.");
-  return { people: parsed.slice(0, 40), errors };
-}
-
+const $ = selector => document.querySelector(selector);
+const peopleInput = $('#people'), accessInput = $('#access-code'), startButton = $('#start');
+const exportButton = $('#export'), pauseButton = $('#pause'), retryButton = $('#retry');
+const errorBox = $('#form-error'), cards = $('#cards'), cache = new Map();
+let runs = [], busy = false, stop = false;
+$('#author-prompt').textContent = PORTRAIT_PROMPT;
+$('#judge-prompt').textContent = JUDGE_PROMPT;
+$('#panel-models').textContent = AUTHORS.map(model => model.label).join(' · ');
+peopleInput.addEventListener('input', () => { $('#line-count').textContent = peopleInput.value.split(/\r?\n/).filter(line => line.trim()).length; });
+startButton.addEventListener('click', startEvaluation);
+exportButton.addEventListener('click', exportResults);
+pauseButton.addEventListener('click', () => { stop = true; pauseButton.disabled = true; pauseButton.textContent = 'Dokončuji rozběhnuté kroky…'; });
+retryButton.addEventListener('click', () => execute(runs.flatMap(run => run.results.filter(result => !isFinal(result)).map(result => ({ run, result })))));
+function showError(message) { errorBox.textContent = message; errorBox.hidden = false; }
 async function startEvaluation() {
   const { people, errors } = parsePeople(peopleInput.value);
-  const accessCode = accessInput.value.trim();
-  errorBox.hidden = true;
-
-  if (!people.length) errors.unshift("Zadejte alespoň jedno jméno a rok narození.");
-  if (!accessCode) errors.unshift("Zadejte přístupový kód k pilotu.");
-  if (errors.length) {
-    errorBox.textContent = errors[0];
-    errorBox.hidden = false;
-    return;
-  }
-
-  runs = people.map((person, index) => ({ ...person, index, state: "queued", results: [] }));
-  renderCards();
-  resultsSection.hidden = false;
-  resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
-  startButton.disabled = true;
-  exportButton.disabled = true;
-
-  await runPool(runs, 2, run => evaluatePerson(run, accessCode));
-
-  startButton.disabled = false;
-  exportButton.disabled = !runs.some(run => run.state === "done");
-  updateProgress();
+  if (!people.length) errors.unshift('Zadejte alespoň jedno jméno a rok narození.');
+  if (errors.length) return showError(errors[0]);
+  if (!accessInput.value.trim()) return showError('Zadejte přístupový kód k pilotu.');
+  runs = people.map((person, index) => {
+    if (!cache.has(person.key)) cache.set(person.key, { ...person, results: AUTHORS.map(model => ({ model: model.id, label: model.label, status: 'queued', attempts: [] })) });
+    return Object.assign(cache.get(person.key), { index });
+  });
+  renderCards(); $('#results-section').hidden = false;
+  $('#results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  await execute(runs.flatMap(run => run.results.filter(result => !isFinal(result)).map(result => ({ run, result }))));
 }
-
-async function runPool(items, concurrency, task) {
+async function execute(jobs) {
+  if (busy || !jobs.length) return;
+  const accessCode = accessInput.value.trim();
+  if (!accessCode) return showError('Zadejte přístupový kód k pilotu.');
+  busy = true; stop = false; errorBox.hidden = true;
+  startButton.disabled = peopleInput.disabled = accessInput.disabled = true;
+  pauseButton.hidden = false; pauseButton.disabled = false; pauseButton.textContent = 'Pozastavit';
   let cursor = 0;
   async function worker() {
-    while (cursor < items.length) {
-      const item = items[cursor++];
-      await task(item);
+    while (!stop && cursor < jobs.length) {
+      const { run, result } = jobs[cursor++];
+      await evaluate(run, result, accessCode);
     }
   }
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
+  runs.forEach(renderCard); updateProgress();
+  await Promise.all(Array.from({ length: Math.min(3, jobs.length) }, worker));
+  busy = false; startButton.disabled = peopleInput.disabled = accessInput.disabled = false;
+  pauseButton.hidden = true; runs.forEach(renderCard); updateProgress();
 }
-
-async function evaluatePerson(run, accessCode) {
-  run.state = "running";
-  renderCard(run);
-  updateProgress();
-
+async function requestStep(body, result, accessCode) {
+  const attempt = { action: body.action, startedAt: new Date().toISOString() };
+  result.attempts.push(attempt);
   try {
-    const response = await fetch("/api/evaluate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: run.name, birthYear: run.birthYear, accessCode })
+    const response = await fetch('/api/evaluate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, version: VERSION, accessCode }), signal: AbortSignal.timeout(65000),
     });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || `Server odpověděl ${response.status}.`);
-    run.results = payload.results.map(result => ({ ...result, originalLevel: result.level, manual: false }));
-    run.state = "done";
+    const payload = await response.json().catch(() => ({})); attempt.response = payload;
+    if (!response.ok) {
+      if (payload.fatal || [401, 409].includes(response.status)) { stop = true; showError(payload.error || 'Test byl zastaven.'); }
+      throw new Error(payload.error || `Server odpověděl ${response.status}. Zkuste krok zopakovat.`);
+    }
+    if (payload.version !== VERSION) throw new Error('Server vrátil jinou verzi testu. Obnovte stránku po exportu výsledků.');
+    return payload;
   } catch (error) {
-    run.state = "error";
-    run.error = error.message || "Test se nepodařilo dokončit.";
-  }
-
-  renderCard(run);
-  updateProgress();
+    attempt.error = /timeout|abort/i.test(`${error.name} ${error.message}`) ? 'Vypršel čas spojení. Zkuste krok zopakovat.' : error.message;
+    throw new Error(attempt.error);
+  } finally { attempt.finishedAt = new Date().toISOString(); }
 }
-
+async function evaluate(run, result, accessCode) {
+  const stage = retryStage(result); delete result.error;
+  try {
+    if (stage === 'portrait') {
+      delete result.portrait; delete result.guess;
+      result.status = 'writing'; renderCard(run);
+      const data = await requestStep({ action: 'portrait', model: result.model, name: run.name, birthYear: run.birthYear }, result, accessCode);
+      result.portrait = data.portrait; result.status = data.status;
+      if (data.status !== 'portrait_ready') return;
+    }
+    // Pozastavení zachová portrét; pokračování zaplatí jen chybějícího rozhodčího.
+    if (stop) { result.status = 'portrait_ready'; return; }
+    result.status = 'judging'; renderCard(run);
+    const data = await requestStep({ action: 'identify', portrait: result.portrait }, result, accessCode);
+    result.guess = data.guess; result.status = classifyGuess(run.name, data.guess);
+  } catch (error) { result.status = 'technical_error'; result.error = error.message; }
+  finally { renderCard(run); updateProgress(); }
+}
 function renderCards() {
   cards.replaceChildren();
   runs.forEach(run => {
-    const fragment = template.content.cloneNode(true);
-    const card = fragment.querySelector(".person-card");
-    card.dataset.index = run.index;
-    cards.append(fragment);
-    renderCard(run);
-  });
-  updateProgress();
+    const fragment = $('#card-template').content.cloneNode(true);
+    fragment.querySelector('.person-card').dataset.index = run.index;
+    cards.append(fragment); renderCard(run);
+  }); updateProgress();
 }
-
 function renderCard(run) {
   const card = cards.querySelector(`[data-index="${run.index}"]`);
   if (!card) return;
-  card.classList.toggle("running", run.state === "running");
-  card.querySelector(".person-position").textContent = `TEST ${String(run.index + 1).padStart(2, "0")}`;
-  card.querySelector(".person-name").textContent = run.name;
-  card.querySelector(".person-year").textContent = `(${run.birthYear})`;
-  const status = card.querySelector(".card-status");
-  const modelResults = card.querySelector(".model-results");
-
-  if (run.state === "queued") status.textContent = "Čeká ve frontě…";
-  if (run.state === "running") status.textContent = "Modely pátrají v paměti…";
-  if (run.state === "error") status.textContent = run.error;
-  if (run.state === "done") status.textContent = "Kliknutím na semafor můžete automatický odhad opravit.";
-
-  modelResults.replaceChildren();
-  if (run.state === "done") {
-    run.results.forEach((result, resultIndex) => modelResults.append(createModelRow(run, result, resultIndex)));
-  }
-  updateScore(card, run);
-}
-
-function createModelRow(run, result, resultIndex) {
-  const row = document.createElement("div");
-  row.className = "model-row";
-
-  const signal = document.createElement("button");
-  signal.type = "button";
-  signal.className = `signal ${levelClass(result)}`;
-  signal.title = result.available ? "Kliknutím změnit hodnocení" : "Model neodpověděl";
-  signal.setAttribute("aria-label", result.available ? "Změnit hodnocení modelu" : "Model neodpověděl");
-  signal.disabled = !result.available;
-  signal.addEventListener("click", () => {
-    result.level = result.level === 2 ? 1 : result.level === 1 ? 0 : 2;
-    result.manual = result.level !== result.originalLevel;
-    renderCard(run);
+  const opened = [...card.querySelectorAll('details[open]')].map(item => item.dataset.model);
+  card.querySelector('.person-position').textContent = `TEST ${String(run.index + 1).padStart(2, '0')}`;
+  card.querySelector('.person-name').textContent = run.name;
+  card.querySelector('.person-year').textContent = `(${run.birthYear})`;
+  const { matched, pending, total } = scoreResults(run.results);
+  card.querySelector('.score').textContent = pending ? `${matched}–${matched + pending}` : matched;
+  card.querySelector('.card-status').textContent = pending ? `Zatím poznáno ${matched} ze ${total} portrétů. Nedokončeno: ${pending}. Rozmezí není konečné skóre.` : `Astra poznala jméno z ${matched} ze ${total} portrétů.`;
+  card.classList.toggle('running', run.results.some(result => ['writing', 'judging'].includes(result.status)));
+  const rows = card.querySelector('.model-results'); rows.replaceChildren();
+  run.results.forEach(result => {
+    const detail = document.createElement('details'); detail.className = 'model-result'; detail.dataset.model = result.model; detail.open = opened.includes(result.model);
+    const summary = document.createElement('summary');
+    const light = document.createElement('i'); light.className = `light ${result.status === 'match' ? 'green' : isFinal(result) ? 'red' : 'gray'}`;
+    const title = document.createElement('b'); title.textContent = result.label;
+    const state = document.createElement('span'); state.className = 'result-state'; state.textContent = statusText(result);
+    summary.append(light, title, state);
+    const portrait = document.createElement('p'); portrait.className = 'portrait'; portrait.textContent = result.portrait || 'Portrét zatím není k dispozici.';
+    const guess = document.createElement('p'); guess.className = 'guess'; guess.textContent = result.guess ? `Tip Astry: ${result.guess}` : 'Astra zatím netipovala.';
+    detail.append(summary, portrait, guess);
+    if (result.error) { const error = document.createElement('p'); error.className = 'hint'; error.textContent = result.error; detail.append(error); }
+    if (!isFinal(result)) {
+      const retry = document.createElement('button'); retry.className = 'secondary'; retry.type = 'button'; retry.disabled = busy;
+      retry.textContent = retryStage(result) === 'identify' ? 'Zkusit jen Astru znovu' : 'Zkusit portrét znovu';
+      retry.addEventListener('click', () => execute([{ run, result }])); detail.append(retry);
+    } rows.append(detail);
   });
-
-  const name = document.createElement("div");
-  name.className = "model-name";
-  name.textContent = result.label;
-
-  const answer = document.createElement("div");
-  answer.className = "model-answer";
-  if (!result.available) {
-    answer.textContent = result.error || "Technická chyba — nezapočítává se.";
-  } else if (result.level === 0 && !result.profession && !result.knownFor) {
-    answer.textContent = "UNKNOWN";
-  } else {
-    const profession = document.createElement("b");
-    profession.textContent = result.profession || "Neurčený obor";
-    answer.append(profession);
-    if (result.knownFor) answer.append(document.createTextNode(` — ${result.knownFor}`));
-  }
-  if (result.manual) {
-    const note = document.createElement("span");
-    note.className = "manual-note";
-    note.textContent = "upraveno ručně";
-    answer.append(note);
-  }
-
-  row.append(signal, name, answer);
-  return row;
 }
-
-function levelClass(result) {
-  if (!result.available) return "gray";
-  return result.level === 2 ? "green" : result.level === 1 ? "orange" : "red";
+function statusText(result) {
+  return ({ queued: 'Čeká ve frontě', writing: 'Píše portrét…', portrait_ready: 'Portrét čeká na Astru', judging: 'Astra tipuje…', match: `Poznáno: ${result.guess}`, mismatch: `Jiný tip: ${result.guess}`, judge_unknown: 'Astra: NEVÍM', author_unknown: 'Autor: NEVÍM', identity_leak: 'Prozrazené jméno / rok — nehodnoceno', invalid_portrait: 'Nedodržený formát — nehodnoceno', technical_error: 'Technická chyba — lze zopakovat' })[result.status] || result.status;
 }
-
-function updateScore(card, run) {
-  const score = card.querySelector(".score");
-  if (run.state !== "done") {
-    score.textContent = "—";
-    return;
-  }
-  const available = run.results.filter(result => result.available);
-  if (available.length !== 5) {
-    score.textContent = "?";
-    score.title = `Odpovědělo jen ${available.length} z 5 modelů.`;
-    return;
-  }
-  score.textContent = available.reduce((sum, result) => sum + result.level, 0);
-}
-
 function updateProgress() {
-  const finished = runs.filter(run => run.state === "done" || run.state === "error").length;
-  progress.textContent = `${finished} / ${runs.length}`;
+  const results = runs.flatMap(run => run.results);
+  $('#progress').textContent = `${results.filter(isFinal).length} / ${results.length} portrétů`;
+  retryButton.hidden = !results.some(result => !isFinal(result)); retryButton.disabled = busy; exportButton.disabled = !runs.length;
+  const attempts = [...cache.values()].flatMap(run => run.results.flatMap(result => result.attempts));
+  const costs = attempts.map(attempt => attempt.response?.metadata?.usage?.cost).filter(cost => typeof cost === 'number');
+  $('#cost').textContent = costs.length ? `Dosud vykázaná cena v této stránce: $${costs.reduce((a, b) => a + b, 0).toFixed(3)}. Nezahrnuje případná volání bez údaje o ceně.` : 'Cena se zobrazí podle údajů poskytovatele. Opakování je další placené volání.';
 }
-
 function exportResults() {
-  const output = {
-    generatedAt: new Date().toISOString(),
-    note: "Barvy mohou obsahovat ruční opravy autora pilotu.",
-    people: runs.map(({ index, state, error, ...run }) => run)
-  };
-  const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/json" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `qrfight-pilot-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  const output = { version: VERSION, generatedAt: new Date().toISOString(), authors: AUTHORS, judge: JUDGE, prompts: { portrait: PORTRAIT_PROMPT, judge: JUDGE_PROMPT }, note: 'Rozpoznatelnost anonymního portrétu, nikoli ověření pravdivosti. Shoda jména ignoruje diakritiku, velikost písmen a pořadí dvou slov. Přezdívky a jiné varianty se mohou vyhodnotit jako jiný tip.', people: [...cache.values()].map(({ index, ...run }) => ({ ...run, score: scoreResults(run.results) })) };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' }));
+  const link = document.createElement('a'); link.href = url; link.download = `qrfight-pilot-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-export { parsePeople };
-

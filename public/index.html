@@ -13,7 +13,8 @@
     <header class="hero">
       <p class="eyebrow">PILOTNÍ EXPERIMENT</p>
       <h1>Jste ve <em>vahách?</em></h1>
-      <p class="lede">Pět jazykových modelů dostane jen jméno a rok narození. Žádný internet, žádná nápověda. Co si vybaví ze své naučené paměti?</p>
+      <p class="lede">Čtyři modely napíšou váš portrét. Bez jména. Pátý hádá, kdo jste. Pozná vás Astra jen podle toho, co si ostatní vybaví?</p>
+      <p class="model-panel" id="panel-models"></p>
     </header>
 
     <section class="panel input-panel" aria-labelledby="input-heading">
@@ -28,6 +29,7 @@
       <label for="people">Jméno a rok narození oddělte středníkem</label>
       <textarea id="people" rows="9" spellcheck="false" placeholder="Pavel Nedvěd; 1972&#10;Ewa Farna; 1993&#10;Miloš Čermák; 1968"></textarea>
       <p class="hint">Pilot přijme nejvýše 40 různých kombinací jména a roku.</p>
+      <p class="hint">Placený test přes OpenRouter, bez vyhledávání. Jméno a rok odešleme autorům portrétů, Astře jen portrét. Zadávejte sebe nebo veřejně známé osoby.</p>
 
       <div class="access-row">
         <div>
@@ -43,28 +45,41 @@
       <div class="section-head results-head">
         <div>
           <p class="step">02 / VÝSLEDKY</p>
-          <h2 id="results-heading">Modelová paměť v přímém přenosu</h2>
+          <h2 id="results-heading">Pozná Astra, kdo je X?</h2>
         </div>
         <div class="result-actions">
           <span id="progress" class="progress">0 / 0</span>
+          <button id="pause" class="secondary" type="button" hidden>Pozastavit</button>
+          <button id="retry" class="secondary" type="button" hidden>Dokončit chybějící</button>
           <button id="export" class="secondary" type="button" disabled>Export JSON</button>
         </div>
       </div>
 
       <div class="legend" aria-label="Legenda výsledků">
-        <span><i class="light green"></i> zná konkrétně</span>
-        <span><i class="light orange"></i> má tušení</span>
-        <span><i class="light red"></i> nezná</span>
-        <span><i class="light gray"></i> technická chyba</span>
+        <span><i class="light green"></i> Astra poznala jméno</span>
+        <span><i class="light red"></i> jiné jméno nebo „nevím“</span>
+        <span><i class="light gray"></i> zatím nehodnoceno</span>
       </div>
+      <p class="hint results-hint">Rozklikněte model: uvidíte celý portrét i tip Astry. Výsledky zůstávají jen v této stránce — před zavřením je exportujte. Hotové výsledky při opětovném spuštění použijeme znovu.</p>
+      <p id="cost" class="hint results-hint"></p>
 
       <div id="cards" class="cards" aria-live="polite"></div>
     </section>
 
     <section class="method">
       <p class="step">JAK ČÍST VÝSLEDEK</p>
-      <p><b>Zelená</b> znamená, že model uvedl profesi i konkrétní důvod známosti. <b>Oranžová</b> je rámcové nebo nejisté rozpoznání. <b>Červená</b> znamená poctivé „nevím“.</p>
-      <p>Barva je nejdřív vlastní odhad modelu, nikoli důkaz pravdy. Kliknutím na semafor ji můžete opravit podle skutečnosti. Skóre je prostý součet: zelená 2, oranžová 1, červená 0. Žádná numerologická magie navíc.</p>
+      <p>Autoři dostanou jméno a rok narození. Napíšou nejvýše pět krátkých řádků česky, nebo přiznají „nevím“. <b>GPT-6 Astra dostane jen anonymní portrét</b> — bez původního jména, roku či nabídky kandidátů. Smí zkusit jeden pravděpodobný tip.</p>
+      <p><b>Zelená = shoda jména.</b> Červená = jiné jméno, „nevím“ Astry nebo „nevím“ autora. Oranžovou jsme zrušili. Šedá je čekání, chyba nebo portrét, který prozradil identitu či nedodržel formát. Do konečného výsledku zatím nepatří; ukazujeme rozmezí a možnost dokončení.</p>
+      <p>Měříme <b>rozpoznatelnost portrétu, ne pravdivost všech vět</b> ani přímý obsah parametrů. Astra může poznat člověka i z portrétu s chybami — nebo nepoznat správný portrét. Shoda ignoruje diakritiku a pořadí jména a příjmení; pseudonymy a jiné varianty mohou vyjít červeně. Kontrola úniku jména a roku je základní, nikoli spolehlivá anonymizace. Stále je to pilot.</p>
+      <details class="prompts">
+        <summary>Přesné prompty: co říkáme modelům</summary>
+        <h3>Autor portrétu</h3>
+        <pre id="author-prompt"></pre>
+        <p>Samostatná uživatelská zpráva: například „Miloš Čermák, narozen/a 1968“.</p>
+        <h3>Astra — rozhodčí</h3>
+        <pre id="judge-prompt"></pre>
+        <p>Samostatná uživatelská zpráva obsahuje pouze portrét. Nový, oddělený dotaz pro každý portrét.</p>
+      </details>
     </section>
   </main>
 
@@ -76,8 +91,8 @@
           <h3><span class="person-name"></span> <small class="person-year"></small></h3>
         </div>
         <div class="score-wrap">
-          <strong class="score">—</strong><span>/10</span>
-          <small>LLM skóre</small>
+          <strong class="score">—</strong><span>/4</span>
+          <small>portrétů</small>
         </div>
       </div>
       <p class="card-status">Čeká ve frontě…</p>
@@ -88,4 +103,3 @@
   <script src="/app.js" type="module"></script>
 </body>
 </html>
-
