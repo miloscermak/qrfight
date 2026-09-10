@@ -22,3 +22,10 @@ export function parsePeople(value) {
   if (people.length > 40) errors.push('Pilot přijme nejvýše 40 jmen najednou.');
   return { people, errors };
 }
+
+export function parsePerson(value) {
+  if (/[\n\r]/.test(value.trim())) return { people: [], errors: ['Teď hraje jeden člověk. Zadejte jedno jméno a rok, například „Ewa Farna, 1993“.'] };
+  const parsed = parsePeople(value);
+  if (parsed.people.length !== 1 || /[;,\t]/.test(parsed.people[0]?.name || '')) return { people: [], errors: ['Zadejte jedno jméno a rok narození, například „Ewa Farna, 1993“.'] };
+  return parsed;
+}

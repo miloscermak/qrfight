@@ -1,113 +1,232 @@
 <!doctype html>
 <html lang="cs">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Pilotní test toho, co si jazykové modely vybaví o konkrétních lidech bez hledání na internetu.">
-  <title>Jste ve vahách?</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <main>
-    <header class="hero">
-      <p class="eyebrow">PILOTNÍ EXPERIMENT</p>
-      <h1>Jste ve <em>vahách?</em></h1>
-      <p class="lede">Čtyři modely napíšou váš portrét. Bez jména. Pátý hádá, kdo jste. Pozná vás Astra jen podle toho, co si ostatní vybaví?</p>
-      <p class="model-panel" id="panel-models"></p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Čtyři AI napíšou váš portrét. Pátá hádá, kdo jste. Konferenční experiment bez hledání na internetu."
+    />
+    <title>Jste ve vahách? — Konferenční experiment</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="wordmark" href="/" aria-label="Ve vahách — úvod"
+        >VV<span>VE VAHÁCH</span></a
+      ><span class="edition">ŽIVÝ EXPERIMENT / PILOT</span
+      ><a class="stage-link" href="/stage.html" target="_blank" rel="noopener"
+        >Publikum ↗</a
+      >
     </header>
-
-    <section class="panel input-panel" aria-labelledby="input-heading">
-      <div class="section-head">
-        <div>
-          <p class="step">01 / VSTUP</p>
-          <h2 id="input-heading">Jedno jméno na řádek</h2>
+    <main>
+      <section class="entry" aria-labelledby="input-heading">
+        <div class="entry-story">
+          <p class="eyebrow">BEZ GOOGLU. BEZ NÁPOVĚDY.</p>
+          <h1 id="input-heading">
+            Má vás AI<br />v <span class="highlight">hlavě?</span>
+          </h1>
+          <p class="lede">
+            Čtyři modely napíšou váš portrét.<br />Vymažou jméno. Pátý hádá, kdo
+            jste.
+          </p>
+          <p class="aside">
+            Takový malý test slávy.<br />A velký test paměti strojů.
+          </p>
+          <div
+            class="formula"
+            aria-label="Čtyři autoři, jeden rozhodčí, vaše identita"
+          >
+            <span>4 <small>AUTOŘI</small></span
+            ><b>→</b><span>1 <small>ROZHODČÍ</small></span
+            ><b>→</b><span>X <small>JSTE TO VY?</small></span>
+          </div>
         </div>
-        <span class="counter"><b id="line-count">0</b> / 40</span>
-      </div>
-
-      <label for="people">Jméno a rok narození oddělte čárkou</label>
-      <textarea id="people" rows="9" spellcheck="false" placeholder="Pavel Nedvěd, 1972&#10;Ewa Farna, 1993&#10;Miloš Čermák, 1968"></textarea>
-      <p class="hint">Pilot přijme nejvýše 40 různých kombinací jména a roku.</p>
-      <p class="hint">Placený test přes OpenRouter, bez vyhledávání. Jméno a rok odešleme autorům portrétů, Astře jen portrét. Zadávejte sebe nebo veřejně známé osoby.</p>
-
-      <div class="access-row">
-        <div>
-          <label for="access-code">Přístupový kód</label>
-          <input id="access-code" type="password" autocomplete="off" placeholder="Kód pro pilot">
-        </div>
-        <button id="start" type="button">Spustit test</button>
-      </div>
-      <p id="form-error" class="message error" role="alert" hidden></p>
-    </section>
-
-    <section id="results-section" class="results-section" aria-labelledby="results-heading" hidden>
-      <div class="section-head results-head">
-        <div>
-          <p class="step">02 / VÝSLEDKY</p>
-          <h2 id="results-heading">Pozná Astra, kdo je X?</h2>
-        </div>
-        <div class="result-actions">
-          <span id="progress" class="progress">0 / 0</span>
-          <button id="pause" class="secondary" type="button" hidden>Pozastavit</button>
-          <button id="retry" class="secondary" type="button" hidden>Dokončit chybějící</button>
-          <button id="export" class="secondary" type="button" disabled>Export JSON</button>
-        </div>
-      </div>
-
-      <div class="legend" aria-label="Legenda výsledků">
-        <span><i class="light green"></i> Astra poznala jméno</span>
-        <span><i class="light red"></i> jiné jméno nebo „nevím“</span>
-        <span><i class="light gray"></i> zatím nehodnoceno</span>
-      </div>
-      <p class="hint results-hint">Rozklikněte model: uvidíte celý portrét i tip Astry. Výsledky zůstávají jen v této stránce — před zavřením je exportujte. Hotové výsledky při opětovném spuštění použijeme znovu.</p>
-      <p id="cost" class="hint results-hint"></p>
-      <section id="export-preview" class="export-preview" aria-label="Export výsledků" hidden>
-        <a id="download-export" download>Stáhnout soubor JSON</a>
-        <p class="hint">Snímek výsledků v okamžiku exportu. Pokud vestavěný prohlížeč soubor nestáhne, můžete data zkopírovat níže.</p>
-        <details><summary>Zobrazit data ke zkopírování</summary>
-          <label for="export-data">Exportovaná data</label>
-          <textarea id="export-data" readonly rows="6" spellcheck="false"></textarea>
-        </details>
+        <form id="entry-form" class="entry-pass">
+          <div class="pass-heading">
+            <span>VSTUP DO EXPERIMENTU</span><span>01 / 01</span>
+          </div>
+          <div class="pass-body">
+            <span class="pass-symbol" aria-hidden="true">X</span>
+            <h2>Kdo se skrývá za X?</h2>
+            <label for="people">Vaše jméno, rok narození</label>
+            <input
+              id="people"
+              type="text"
+              maxlength="108"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Miloš Čermák, 1968"
+              aria-describedby="input-hint"
+              required
+            />
+            <p id="input-hint" class="hint">
+              Jeden člověk. Mezi jménem a rokem čárka.
+            </p>
+            <label for="access-code">Kód z konference</label
+            ><input
+              id="access-code"
+              type="password"
+              autocomplete="off"
+              placeholder="Přístupový kód k pilotu"
+              required
+            />
+            <button id="start" class="primary" type="submit">
+              Pozná mě AI? <span aria-hidden="true">↗</span>
+            </button>
+            <p id="form-error" class="message error" role="alert" hidden></p>
+            <p class="privacy-note">
+              Jméno a rok dostanou modely přes OpenRouter. Astra dostane jen
+              portrét. Do souhrnného úložiště neukládáme jména, roky ani texty
+              portrétů. Zadávejte sebe nebo veřejně známou osobu.
+            </p>
+          </div>
+          <div class="pass-footer">
+            <span>4 PORTRÉTY / 1 IDENTITA</span><span>BEZ VYHLEDÁVÁNÍ</span>
+          </div>
+        </form>
       </section>
-
-      <div id="cards" class="cards" aria-live="polite"></div>
-    </section>
-
-    <section class="method">
-      <p class="step">JAK ČÍST VÝSLEDEK</p>
-      <p>Autoři dostanou jméno a rok narození. Napíšou nejvýše pět krátkých řádků česky, nebo přiznají „nevím“. <b>GPT-6 Astra dostane jen anonymní portrét</b> — bez původního jména, roku či nabídky kandidátů. Smí zkusit jeden pravděpodobný tip.</p>
-      <p><b>Zelená = shoda jména.</b> Červená = jiné jméno, „nevím“ Astry nebo „nevím“ autora. Oranžovou jsme zrušili. Šedá je čekání, chyba nebo portrét, který prozradil identitu či nedodržel formát. Do konečného výsledku zatím nepatří; ukazujeme rozmezí a možnost dokončení.</p>
-      <p>Měříme <b>rozpoznatelnost portrétu, ne pravdivost všech vět</b> ani přímý obsah parametrů. Astra může poznat člověka i z portrétu s chybami — nebo nepoznat správný portrét. Shoda ignoruje diakritiku a pořadí jména a příjmení; pseudonymy a jiné varianty mohou vyjít červeně. Kontrola úniku jména a roku je základní, nikoli spolehlivá anonymizace. Stále je to pilot.</p>
-      <details class="prompts">
-        <summary>Přesné prompty: co říkáme modelům</summary>
-        <h3>Autor portrétu</h3>
-        <pre id="author-prompt"></pre>
-        <p>Samostatná uživatelská zpráva: například „Miloš Čermák, narozen/a 1968“.</p>
-        <h3>Astra — rozhodčí</h3>
-        <pre id="judge-prompt"></pre>
-        <p>Samostatná uživatelská zpráva obsahuje pouze portrét. Nový, oddělený dotaz pro každý portrét.</p>
-      </details>
-    </section>
-  </main>
-
-  <template id="card-template">
-    <article class="person-card">
-      <div class="card-top">
+      <section
+        id="results-section"
+        class="results-section"
+        aria-labelledby="results-heading"
+        hidden
+      >
+        <div class="section-head">
+          <h2 id="results-heading">Váš otisk v AI.</h2>
+          <span id="progress" class="eyebrow" role="status"
+            >0 / 4 portrétů</span
+          >
+        </div>
+        <div id="cards" class="cards"></div>
+        <div class="result-actions">
+          <button id="pause" class="secondary" type="button" hidden>
+            Pozastavit</button
+          ><button id="retry" class="secondary" type="button" hidden>
+            Dokončit chybějící</button
+          ><button id="export" class="secondary" type="button" disabled>
+            Uložit portréty a prompty ↓
+          </button>
+        </div>
+        <p class="hint">
+          Rozklikněte model a přečtěte si jeho portrét i tip Astry. Texty jsou
+          jen v této stránce. Před zavřením si je můžete uložit.
+        </p>
+        <p id="cost" class="hint"></p>
+        <section
+          id="export-preview"
+          class="export-preview"
+          aria-label="Export výsledků"
+          hidden
+        >
+          <a id="download-export" download>Stáhnout soubor JSON ↓</a>
+          <p class="hint">
+            Snímek výsledků v okamžiku exportu. Pokud prohlížeč soubor nestáhne,
+            data můžete zkopírovat níže.
+          </p>
+          <details>
+            <summary>Zobrazit data ke zkopírování</summary>
+            <label for="export-data">Exportovaná data</label
+            ><textarea
+              id="export-data"
+              readonly
+              rows="6"
+              spellcheck="false"
+            ></textarea>
+          </details>
+        </section>
+      </section>
+      <section class="cast" aria-label="Modely v experimentu">
+        <span class="eyebrow">KDO SI VÁS VYBAVUJE</span>
+        <p id="panel-models"></p>
+        <span class="judge-label">HÁDÁ: GPT-6 ASTRA</span>
+      </section>
+      <section class="method" aria-labelledby="method-heading">
         <div>
-          <p class="person-position"></p>
-          <h3><span class="person-name"></span> <small class="person-year"></small></h3>
+          <p class="eyebrow">PRAVIDLA HRY</p>
+          <h2 id="method-heading">Poznat není<br />totéž co vědět.</h2>
         </div>
-        <div class="score-wrap">
-          <strong class="score">—</strong><span>/4</span>
-          <small>portrétů</small>
+        <div class="method-text">
+          <p>
+            Každý autor dostane jméno a rok narození. Napíše česky až pět řádků,
+            nebo přizná „nevím“. <strong>Astra vidí jen portrét</strong> — bez
+            jména, roku a seznamu kandidátů. Smí jednou tipovat.
+          </p>
+          <div class="legend">
+            <span><i class="light green"></i> Shoda jména = bod</span
+            ><span
+              ><i class="light red"></i> Jiný tip nebo „nevím“ = bez bodu</span
+            ><span
+              ><i class="light gray"></i> Nedokončeno = zatím nehodnotíme</span
+            >
+          </div>
+          <p>
+            Výsledek je <strong>počet rozpoznaných portrétů ze čtyř</strong>.
+            Není to kontrola pravdivosti ani objektivní měřítko slávy. Astra
+            může poznat i portrét s chybami. Čtyři body? Pro dnešní hru jste „AI
+            celebrita“. Nula? Třeba jen dobře střežené tajemství.
+          </p>
+          <details>
+            <summary>Metodika, soukromí a přesné prompty</summary>
+            <p>
+              Shoda ignoruje diakritiku, velikost písmen a obrácené pořadí dvou
+              slov. Přezdívka nebo jiná varianta jména může skončit bez bodu.
+              Kontrola prozrazeného jména a roku je základní, nikoli záruka
+              anonymizace portrétu. Chyby a nedodržený formát mají šedou značku;
+              ukazujeme průběžný počet, ne falešnou nulu.
+            </p>
+            <p>
+              Veřejný souhrn ukazuje pouze počty. Stejnou kombinaci jména a roku
+              započítáme během dne jednou pomocí denního identifikátoru
+              vytvořeného s tajným serverovým klíčem. Neověřujeme, kdo vstup
+              zadal — nejde o počet ověřených účastníků. Záznamy obsahují stavy
+              modelů a pomocné údaje pro opakování, ne jména, roky, tipy ani
+              portréty. Automaticky je průběžně mažeme po skončení retenční doby
+              (přibližně tři dny). Souhrn se počítá pro dnešek podle českého
+              času. Zpracování dotazů u poskytovatelů modelů se řídí jejich
+              podmínkami.
+            </p>
+            <h3>Autor portrétu</h3>
+            <pre id="author-prompt"></pre>
+            <p>Uživatelská zpráva: například „Miloš Čermák, narozen/a 1968“.</p>
+            <h3>Astra — rozhodčí</h3>
+            <pre id="judge-prompt"></pre>
+            <p>
+              Uživatelská zpráva obsahuje pouze portrét. Pro každý portrét nový,
+              oddělený dotaz.
+            </p>
+          </details>
         </div>
-      </div>
-      <p class="card-status">Čeká ve frontě…</p>
-      <div class="model-results"></div>
-    </article>
-  </template>
-
-  <script src="/app.js" type="module"></script>
-</body>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <span>VE VAHÁCH / KONFERENČNÍ PILOT</span
+      ><a href="/stage.html" target="_blank" rel="noopener"
+        >Co na to celé publikum? ↗</a
+      >
+    </footer>
+    <template id="card-template">
+      <article class="person-card">
+        <div class="card-top">
+          <div>
+            <p class="person-position eyebrow">OSOBNÍ VÝSLEDEK</p>
+            <h3 class="person-name"></h3>
+            <p class="person-year"></p>
+            <p class="result-title"></p>
+          </div>
+          <div class="score-wrap">
+            <strong class="score">0</strong><span>/4</span
+            ><small>ROZPOZNANÉ PORTRÉTY</small>
+          </div>
+        </div>
+        <p class="card-status" role="status"></p>
+        <div class="model-results"></div>
+        <div class="card-bottom">
+          <span>JMÉNO ZMIZÍ. OTISK ZŮSTANE.</span><span>VV / PILOT</span>
+        </div>
+      </article>
+    </template>
+    <script src="/app.js" type="module"></script>
+  </body>
 </html>

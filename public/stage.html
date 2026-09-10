@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Publikum ve vahách — živý souhrn</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="stage-body">
+    <header class="masthead">
+      <a class="wordmark" href="/">VV<span>VE VAHÁCH</span></a
+      ><span class="edition">KONFERENČNÍ PILOT / SOUHRN DNEŠKA</span
+      ><a class="stage-link" href="/">Zkusit hru ↗</a>
+    </header>
+    <main class="stage-main">
+      <div class="stage-intro">
+        <h1>Má nás AI v hlavě?</h1>
+        <p class="live-status" role="status">
+          <span class="live-dot" aria-hidden="true"></span
+          ><span id="live-status">Načítáme dnešní výsledky…</span>
+        </p>
+      </div>
+      <div class="stage-metrics">
+        <section class="stage-metric">
+          <strong id="entries">—</strong>
+          <h2>vstupů do hry</h2>
+          <p>Stejné jméno a rok dnes jen jednou.</p>
+        </section>
+        <section class="stage-metric">
+          <strong id="recognized">—</strong>
+          <h2>alespoň jednou poznáno</h2>
+          <p>Astra poznala jeden či více portrétů.</p>
+        </section>
+        <section class="stage-metric">
+          <strong id="all-four">—</strong>
+          <h2>AI celebrit</h2>
+          <p>Čtyři portréty. Čtyři správné tipy.</p>
+        </section>
+      </div>
+      <div class="stage-detail">
+        <section>
+          <h2>KOLIK PORTRÉTŮ ASTRA POZNALA?</h2>
+          <div
+            id="distribution"
+            class="distribution"
+            aria-label="Rozdělení dokončených her podle výsledku"
+          ></div>
+          <p class="stage-note" id="completion">
+            Počítáme jen dokončené hry. Chyba není nula.
+          </p>
+        </section>
+        <section>
+          <h2>KDO PÍŠE ROZPOZNATELNÉ PORTRÉTY?</h2>
+          <div id="model-stats"></div>
+          <p class="stage-note">
+            U každého autora: rozpoznané / vyhodnocené portréty. Rozhodčím je
+            vždy GPT-6 Astra.
+          </p>
+        </section>
+      </div>
+      <p id="stats-error" class="message stage-error" role="alert" hidden></p>
+      <div class="stage-controls">
+        <button id="toggle-refresh" class="secondary" type="button">
+          Pozastavit živý souhrn</button
+        ><button id="fullscreen" class="secondary" type="button">
+          Celá obrazovka ↗
+        </button>
+      </div>
+      <p class="stage-note">
+        Bez veřejných jmen a portrétů. Počet vstupů není počet ověřených lidí.
+        Výsledky měří rozpoznatelnost, nikoli pravdivost všech vět nebo
+        objektivní slávu. „AI celebrita“ je označení v této hře.
+      </p>
+    </main>
+    <footer class="site-footer stage-footer">
+      <span>ČTYŘI AUTOŘI / JEDEN ROZHODČÍ / ŽÁDNÉ VYHLEDÁVÁNÍ</span
+      ><a href="/">qrfight.netlify.app ↗</a>
+    </footer>
+    <script src="/stage.js" type="module"></script>
+  </body>
+</html>
