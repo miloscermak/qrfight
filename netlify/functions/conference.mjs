@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { createHandler, normalizePerson } from "./evaluate.mjs";
+import { accessError } from "../lib/access.mjs";
 import { AUTHORS, VERSION } from "../../public/protocol.js";
 import { classifyGuess, isFinal } from "../../public/results.js";
 import {
   openStore,
   json,
-  safeEqual,
   sign,
   verify,
   newSession,
@@ -37,8 +37,8 @@ export function createConferenceHandler({
     } catch {
       return json({ error: "Neplatný vstup." }, 400);
     }
-    if (!safeEqual(payload.accessCode || "", env.PILOT_ACCESS_CODE))
-      return json({ error: "Přístupový kód nesedí.", fatal: true }, 401);
+    const denied = accessError(payload.accessCode, env, now());
+    if (denied) return json({ error: denied.error, fatal: true }, denied.status);
     if (payload.version !== VERSION)
       return json(
         { error: "Obnovte stránku, pilot má novou verzi.", fatal: true },

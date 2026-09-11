@@ -4,6 +4,16 @@ Online: https://qrfight.netlify.app. Samostatný projekt, vanilla HTML/CSS/JS a 
 
 Veřejné plátno: https://qrfight.netlify.app/stage.html — souhrny dnešního dne podle českého času, obnovení po 15 sekundách. Bez veřejných jmen, portrétů nebo volby zveřejnění jména.
 
+Schválená veřejná ukázka: https://qrfight.netlify.app/ukazka.html — druhé kolo Miloše Čermáka z 11. září 2026, 3/4, všechny čtyři portréty rozbalené. Původní odpovědi bez oprav; zveřejněny se souhlasem dotčené osoby. Stránka nevolá AI ani nezapisuje do statistik. Upozorňuje na výběr ze dvou kol (2/4 a 3/4) a na možné nepravdivé věty i při správném tipu.
+
+## Předkonferenční online pilot
+
+Plánovaný rozsah je přibližně 300 lidí, nikoli pevná kvóta v aplikaci. Finanční pojistkou zůstává limit OpenRouter klíče. Přístupový kód je pouze v produkční proměnné `PILOT_ACCESS_CODE`, nikoli v repozitáři nebo veřejné stránce.
+
+`PILOT_ACCESS_EXPIRES_AT=2026-09-15T00:00:00+02:00` ukončí platnost na konci pondělí 14. září českého času. Expiraci kontroluje každý požadavek `/api/conference` i původní `/api/evaluate`, před úložištěm a placeným voláním. Neplatně zadaná expirace přístup uzavře. Volání rozběhnuté před hranicí může ještě doběhnout; nové kroky se již nespustí. Dobití kreditu tuto expiraci nezmění.
+
+Před konferencí nastavit **nový** `PILOT_ACCESS_CODE` a odpovídající budoucí `PILOT_ACCESS_EXPIRES_AT`, potom nasadit funkce. Nikdy pouze neposunout expiraci při zachování starého kódu: tím by se starý kód opět aktivoval. Konferenční kód zatím není aktivovaný. Pro lokální historické experimenty lze expiraci vynechat; v online pilotu je nastavená.
+
 ## Metoda v2
 
 Čtyři autoři: Claude Fable 5.1, Gemini 3.8 Flash, Grok 4.6, Qwen3.8 Max. Každý dostane jméno a rok, vytvoří nejvýše pět českých řádků bez jména a roku, nebo odpoví NEVÍM. GPT-6 Astra je pouze rozhodčí: v novém dotazu dostane jen portrét a smí jednou tipovat. Žádné vyhledávací nástroje. Přesné prompty a modelové identifikátory sdílí frontend, backend a tipovací experiment v `public/protocol.js`.

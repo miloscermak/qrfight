@@ -1,8 +1,8 @@
-import { timingSafeEqual } from 'node:crypto';
+import { accessError } from '../lib/access.mjs';
 import { AUTHORS, VERSION, portraitRequest, judgeRequest, isUnknown, leaksIdentity } from '../../public/protocol.js';
 
 // Každý krok dostává vlastní limit, kratší než limit synchronní funkce hostingu.
-export function createHandler({ fetchImpl = fetch, env = process.env, timeoutMs = 52000 } = {}) {
+export function createHandler({ fetchImpl = fetch, env = process.env, timeoutMs = 52000, now = () => Date.now() } = {}) {
   return async request => {
     if (request.method !== 'POST') return json({ error: 'Použijte POST požadavek.' }, 405);
     if (!env.OPENROUTER_API_KEY || !env.PILOT_ACCESS_CODE) return json({ error: 'Pilot nemá nastavené přístupové údaje.', fatal: true }, 503);
@@ -13,7 +13,8 @@ export function createHandler({ fetchImpl = fetch, env = process.env, timeoutMs 
       payload = JSON.parse(raw);
       if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error();
     } catch { return json({ error: 'Neplatná data požadavku.' }, 400); }
-    if (!safeEqual(String(payload.accessCode || ''), env.PILOT_ACCESS_CODE)) return json({ error: 'Přístupový kód nesedí.', fatal: true }, 401);
+    const denied = accessError(payload.accessCode, env, now());
+    if (denied) return json({ error: denied.error, fatal: true }, denied.status);
     if (payload.version !== VERSION) return json({ error: 'Obnovte stránku, pilot má novou verzi.', fatal: true }, 409);
     let body, person;
     if (payload.action === 'portrait') {
@@ -62,10 +63,6 @@ export function normalizePerson(payload) {
   if (name.length < 2 || name.length > 100) return { ok: false, error: 'Jméno musí mít 2 až 100 znaků.' };
   if (!Number.isInteger(birthYear) || birthYear < 1850 || birthYear > new Date().getFullYear()) return { ok: false, error: 'Rok narození není platný.' };
   return { ok: true, person: { name, birthYear } };
-}
-function safeEqual(received, expected) {
-  const left = Buffer.from(received), right = Buffer.from(expected);
-  return left.length === right.length && timingSafeEqual(left, right);
 }
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });

@@ -9,6 +9,38 @@
   --gray: #697164;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
+.sample-link {
+  margin-top: 20px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.sample-main {
+  padding-top: 48px;
+  padding-bottom: 60px;
+}
+.sample-intro {
+  max-width: 850px;
+  margin-bottom: 32px;
+}
+.sample-intro h1 {
+  font-size: clamp(36px, 5vw, 64px);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+  margin: 15px 0 22px;
+}
+.sample-intro p + p {
+  margin-top: 14px;
+}
+.sample-notice {
+  margin: 24px 0;
+  border-left: 3px solid var(--ink);
+  padding-left: 18px;
+}
+.sample-cta {
+  display: inline-block;
+  width: auto;
+  text-decoration: none;
+}
 * {
   box-sizing: border-box;
 }
