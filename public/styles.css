@@ -14,6 +14,11 @@
   font-size: 14px;
   font-weight: 700;
 }
+.pilot-note {
+  font-size: 14px;
+  line-height: 1.55;
+  margin-bottom: 24px;
+}
 .sample-main {
   padding-top: 48px;
   padding-bottom: 60px;

@@ -100,6 +100,14 @@ test('useknutá odpověď je technická chyba, nikoli červená', async () => {
 test('nedostatek kreditu zastaví frontu a nepropustí upstream detail', async () => {
   const response = await createHandler({ env, fetchImpl: async () => new Response('private upstream detail', { status: 402 }) })(request());
   const data = await response.json(); assert.equal(data.fatal, true); assert.equal(JSON.stringify(data).includes('private'), false);
+  assert.match(data.error, /Došly peníze na další generování/);
+});
+for (const status of [401, 403, 429, 500]) test(`chyba poskytovatele ${status} se nevydává za vyčerpaný rozpočet`, async () => {
+  const response = await createHandler({ env, fetchImpl: async () => new Response('private upstream detail', { status }) })(request());
+  const data = await response.json();
+  assert.equal(data.fatal, [401, 403].includes(status));
+  assert.doesNotMatch(data.error, /Došly peníze/);
+  assert.equal(JSON.stringify(data).includes('private'), false);
 });
 test('timeout má samostatnou chybu a nevytváří skryté placené opakování', async () => {
   let calls = 0;

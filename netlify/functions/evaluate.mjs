@@ -38,7 +38,11 @@ export function createHandler({ fetchImpl = fetch, env = process.env, timeoutMs 
       });
       if (!response.ok) {
         const fatal = [401, 402, 403].includes(response.status);
-        return json({ error: fatal ? 'OpenRouter odmítl přístup nebo chybí kredit.' : `Poskytovatel je nedostupný (HTTP ${response.status}). Zkuste zopakovat tento krok.`, fatal }, 502);
+        const error = response.status === 402
+          ? 'Došly peníze na další generování: kredit nebo limit pilotu už nestačí. Ukázku výsledku si můžete dál prohlédnout zdarma.'
+          : fatal ? 'Poskytovatel odmítl přístup k modelům. Správce musí zkontrolovat nastavení pilotu.'
+          : `Poskytovatel je nedostupný (HTTP ${response.status}). Zkuste zopakovat tento krok.`;
+        return json({ error, fatal }, 502);
       }
       const data = await response.json(), choice = data.choices?.[0];
       metadata = { id: data.id, model: data.model, provider: data.provider, usage: data.usage, durationMs: Date.now() - started, finishReason: choice?.finish_reason, rawContent: choice?.message?.content, at: new Date().toISOString() };
